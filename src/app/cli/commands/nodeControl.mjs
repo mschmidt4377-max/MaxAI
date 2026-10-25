@@ -55,7 +55,7 @@ function readJsonFlag(args, flag) {
   }
 }
 
-function parseSpaceLocator(args, { required = false } = {}) {
+export function parseSpaceLocator(args, { required = false } = {}) {
   const spaceId = readFlagValue(args, '--space')
   const spaceName = readFlagValue(args, '--space-name')
   const worker = readFlagValue(args, '--worker')
@@ -146,6 +146,22 @@ function buildUpdateData(kind, args) {
   }
 }
 
+export async function createNodeFromArgs({ kind, args, connection, pretty, timeoutMs }) {
+  await createAndMaybeFocus({
+    connection,
+    pretty,
+    timeoutMs,
+    focus: args.includes('--focus'),
+    payload: {
+      kind,
+      space: parseSpaceLocator(args, { required: true }),
+      title: readFlagValue(args, '--title'),
+      frame: readJsonFlag(args, '--frame'),
+      data: buildCreateData(kind, args),
+    },
+  })
+}
+
 async function createAndMaybeFocus({ connection, payload, pretty, timeoutMs, focus }) {
   const created = await invokeControlSurface(
     connection,
@@ -227,19 +243,7 @@ export async function tryHandleNodeControlCommands({
     if (!['note', 'task', 'website', 'agent', 'terminal'].includes(kind)) {
       fail('node create requires kind: note|task|website|agent|terminal')
     }
-    await createAndMaybeFocus({
-      connection,
-      pretty,
-      timeoutMs,
-      focus: args.includes('--focus'),
-      payload: {
-        kind,
-        space: parseSpaceLocator(args, { required: true }),
-        title: readFlagValue(args, '--title'),
-        frame: readJsonFlag(args, '--frame'),
-        data: buildCreateData(kind, args),
-      },
-    })
+    await createNodeFromArgs({ kind, args, connection, pretty, timeoutMs })
     return true
   }
 

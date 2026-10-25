@@ -10,6 +10,7 @@ import { printUsage } from './usage.mjs'
 import { CONTROL_SURFACE_PROTOCOL_VERSION } from './constants.mjs'
 import { tryHandleMultiEndpointCommands } from './commands/multiEndpoint.mjs'
 import { tryHandleNodeControlCommands } from './commands/nodeControl.mjs'
+import { AGENT_GUIDE, tryHandleAgentControlCommands } from './commands/agentControl.mjs'
 import { createPluginGuideResult } from './pluginGuide.mjs'
 import { parsePluginCommand, resolvePluginCommandTimeout } from './commands/plugins.mjs'
 import {
@@ -66,6 +67,11 @@ async function main() {
   if (command === 'plugin' && !pluginRequest) {
     const result = await createPluginGuideResult()
     process.stdout.write(`${pretty ? JSON.stringify(result, null, 2) : JSON.stringify(result)}\n`)
+    return
+  }
+
+  if (command === 'agent' && args[1] === 'guide') {
+    process.stdout.write(AGENT_GUIDE)
     return
   }
 
@@ -203,6 +209,18 @@ async function main() {
 
   if (
     await tryHandleNodeControlCommands({
+      command,
+      args,
+      connection,
+      pretty,
+      timeoutMs,
+    })
+  ) {
+    return
+  }
+
+  if (
+    await tryHandleAgentControlCommands({
       command,
       args,
       connection,
