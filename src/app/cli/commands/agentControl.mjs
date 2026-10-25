@@ -51,7 +51,37 @@ const ESCAPE_SEQUENCE =
   // eslint-disable-next-line no-control-regex -- terminal escape sequences start with ESC.
   /\u001b\[([0-?]*)[ -/]*([@-~])|\u001b\][^\u0007\u001b]*(?:\u0007|\u001b\\)|\u001b[()*+][0-~]|\u001b[ -~]/gu
 
-export function screenToTailLines(serializedScreen, lineCount) {
+const ZERO_WIDTH = /[\p{Mn}\p{Me}\u200b-\u200f]/u
+const DOUBLE_WIDTH =
+  /[\p{Emoji_Presentation}\u1100-\u115f\u2e80-\u303e\u3041-\u33ff\u3400-\u4dbf\u4e00-\u9fff\ua000-\ua4cf\uac00-\ud7a3\uf900-\ufaff\ufe30-\ufe4f\uff00-\uff60\uffe0-\uffe6\u{20000}-\u{3FFFD}]/u
+
+function cellWidth(char) {
+  if (ZERO_WIDTH.test(char)) {
+    return 0
+  }
+  return DOUBLE_WIDTH.test(char) ? 2 : 1
+}
+
+// Alternate-screen snapshots write every row as exactly `cols` cells and rely on autowrap instead of newlines.
+function wrapToCols(line, cols) {
+  const rows = []
+  let row = ''
+  let width = 0
+  for (const char of line) {
+    const charWidth = cellWidth(char)
+    if (width + charWidth > cols) {
+      rows.push(row)
+      row = ''
+      width = 0
+    }
+    row += char
+    width += charWidth
+  }
+  rows.push(row)
+  return rows
+}
+
+export function screenToTailLines(serializedScreen, lineCount, cols = Infinity) {
   const text = serializedScreen
     .replace(ESCAPE_SEQUENCE, (_match, params, final) =>
       final === 'C' ? ' '.repeat(Number.parseInt(params, 10) || 1) : '',
@@ -59,6 +89,7 @@ export function screenToTailLines(serializedScreen, lineCount) {
     .replace(/(?!\n)\p{Cc}/gu, '')
   const lines = text
     .split('\n')
+    .flatMap(line => wrapToCols(line, cols))
     .map(line => line.trimEnd())
     .filter(line => line.trim().length > 0)
   return lines.slice(-lineCount)
@@ -155,7 +186,11 @@ export async function tryHandleAgentControlCommands({
       { kind: 'query', id: 'session.presentationSnapshot', payload: { sessionId } },
       { pretty, timeoutMs },
     )
-    const lines = screenToTailLines(result.value?.serializedScreen ?? '', lineCount)
+    const lines = screenToTailLines(
+      result.value?.serializedScreen ?? '',
+      lineCount,
+      result.value?.cols,
+    )
     process.stdout.write(lines.length > 0 ? `${lines.join('\n')}\n` : '')
     return true
   }

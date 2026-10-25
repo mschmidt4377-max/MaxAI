@@ -3,6 +3,7 @@ import {
   screenToTailLines,
   tryHandleAgentControlCommands,
 } from '../../../src/app/cli/commands/agentControl.mjs'
+import opencodeSnapshot from './fixtures/opencodePresentationSnapshot.json'
 
 type CapturedRequest = {
   kind: string
@@ -177,5 +178,25 @@ describe('screenToTailLines', () => {
 
     expect(screenToTailLines(screen, 40)).toEqual(['Hello   world', 'link', 'last'])
     expect(screenToTailLines(screen, 1)).toEqual(['last'])
+  })
+
+  it('splits an autowrapped alternate-screen snapshot into cols-wide rows', () => {
+    const { serializedScreen, cols } = opencodeSnapshot
+    expect(serializedScreen).not.toContain('\n')
+
+    const lines = screenToTailLines(serializedScreen, 100, cols)
+
+    expect(lines.length).toBeGreaterThan(1)
+    for (const line of lines) {
+      expect([...line].length).toBeLessThanOrEqual(cols)
+    }
+    expect(lines).toContainEqual(
+      expect.stringMatching(/^\s*┃\s+Ask anything… "What is the tech stack of this$/u),
+    )
+    expect(lines.at(-1)).toMatch(/^\s*~\\Documents\\AI Projects\\Cat Day:main\s+1\.19\.4$/u)
+  })
+
+  it('counts East Asian wide characters as two columns when splitting', () => {
+    expect(screenToTailLines('漢字ab漢字', 40, 4)).toEqual(['漢字', 'ab漢', '字'])
   })
 })
