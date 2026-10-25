@@ -16,7 +16,7 @@ import {
   type PtyHostShutdownRequest,
   type PtyHostCrashRequest,
 } from './protocol'
-import { convertHighByteX10MouseReportsToSgr } from '../pty/x10Mouse'
+import { convertX10MouseReportsToSgr } from '../pty/x10Mouse'
 import { PtyHostSpawnIdentityRegistry } from './spawnIdentityRegistry'
 import { resizePtyAndReadAck } from './resizeAck'
 import { resolveForegroundAgentObservation } from '../../../shared/runtime/agentForegroundRecognition'
@@ -342,12 +342,14 @@ function writeToSession(request: PtyHostWriteRequest): void {
     return
   }
 
+  // Worker-routed input reaches here as utf8 even when xterm emitted it as binary mouse reports.
+  if (process.platform === 'win32') {
+    pty.pty.write(convertX10MouseReportsToSgr(request.data))
+    return
+  }
+
   if (request.encoding === 'binary') {
-    if (process.platform === 'win32') {
-      pty.pty.write(convertHighByteX10MouseReportsToSgr(request.data))
-    } else {
-      pty.pty.write(Buffer.from(request.data, 'binary'))
-    }
+    pty.pty.write(Buffer.from(request.data, 'binary'))
     return
   }
 

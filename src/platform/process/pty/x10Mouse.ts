@@ -1,12 +1,13 @@
-export function convertHighByteX10MouseReportsToSgr(data: string): string {
+export function convertX10MouseReportsToSgr(data: string): string {
   // X10 mouse report: ESC [ M + 3 bytes where each byte is 32-255:
   // - button + 32
   // - x + 32 (1-indexed cell coords)
   // - y + 32 (1-indexed cell coords)
   //
-  // For coordinates beyond 95, x/y bytes exceed 0x7F. Convert those reports to SGR:
+  // ConPTY's input parser does not recognize X10 reports: it drops the ESC [ M prefix
+  // and forwards the 3 payload bytes as typed text. Convert every report to SGR:
   //   ESC [ < button ; x ; y M
-  // which stays ASCII-only.
+  // which ConPTY translates into console mouse events.
   const prefix = '\u001b[M'
   let cursor = 0
   let converted = ''
@@ -40,13 +41,6 @@ export function convertHighByteX10MouseReportsToSgr(data: string): string {
     if (!isCandidate) {
       converted += prefix
       cursor = nextIndex + prefix.length
-      continue
-    }
-
-    const hasHighByte = buttonByte > 127 || xByte > 127 || yByte > 127
-    if (!hasHighByte) {
-      converted += data.slice(nextIndex, nextIndex + 6)
-      cursor = nextIndex + 6
       continue
     }
 
