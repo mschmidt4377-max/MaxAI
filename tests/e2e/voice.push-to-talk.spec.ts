@@ -59,6 +59,33 @@ async function holdPushToTalk(window: Page, holdMs: number): Promise<void> {
   await window.keyboard.up('Alt')
 }
 
+/** Records every indicator phase and text, so a failure shows where the turn stopped. */
+async function recordVoicePhases(window: Page): Promise<() => Promise<string[]>> {
+  await window.evaluate(() => {
+    const seen: string[] = []
+    ;(window as typeof window & { __voicePhases?: string[] }).__voicePhases = seen
+    const record = (): void => {
+      const indicator = document.querySelector('[data-testid="voice-indicator"]')
+      const entry = indicator
+        ? `${indicator.getAttribute('data-voice-phase')}: ${indicator.textContent ?? ''}`
+        : 'hidden'
+      if (seen.at(-1) !== entry) {
+        seen.push(entry)
+      }
+    }
+    new MutationObserver(record).observe(document.body, {
+      subtree: true,
+      childList: true,
+      attributes: true,
+      characterData: true,
+    })
+  })
+  return async () =>
+    await window.evaluate(
+      () => (window as typeof window & { __voicePhases?: string[] }).__voicePhases ?? [],
+    )
+}
+
 test.describe('Voice - push to talk', () => {
   test('sends the transcript to the boss and speaks its SAY line', async () => {
     const { electronApp, window } = await launchApp({
@@ -86,13 +113,18 @@ test.describe('Voice - push to talk', () => {
 
       await chooseVoiceBoss(window, bossNodeId as string)
       const indicator = window.getByTestId('voice-indicator')
+      const readPhases = await recordVoicePhases(window)
 
       // A tap shorter than the minimum hold is cancelled and sends nothing.
       await holdPushToTalk(window, 50)
       await expect(indicator).toHaveAttribute('data-voice-phase', 'cancelled')
 
       await holdPushToTalk(window, 600)
-      await expect(agentNode).toContainText('[opencove-test-voice] heard: list the agents')
+      await expect(agentNode)
+        .toContainText('[opencove-test-voice] heard: list the agents')
+        .catch(async (error: unknown) => {
+          throw new Error(`Voice phases: ${JSON.stringify(await readPhases())}`, { cause: error })
+        })
       await expect(agentNode).toContainText('[opencove-test-voice] instruction: true')
       await expect(agentNode).toContainText('[opencove-test-voice] replied')
       await expect
