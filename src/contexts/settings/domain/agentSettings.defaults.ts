@@ -7,6 +7,7 @@ import { DEFAULT_UI_LANGUAGE, DEFAULT_UI_THEME } from './uiSettings'
 import { DEFAULT_WEBSITE_WINDOW_POLICY } from './websiteWindowSettings'
 import { DEFAULT_BROWSER_MODE, DEFAULT_BROWSER_SEARCH_ENGINE } from './browserSettings'
 import { DEFAULT_SIDEBAR_VIEW_SETTINGS } from './sidebarViewSettings'
+import { DEFAULT_VOICE_SETTINGS } from '../../voice/domain/voiceSettings'
 
 export const DEFAULT_AGENT_SETTINGS: AgentSettings = {
   language: DEFAULT_UI_LANGUAGE,
@@ -99,4 +100,5 @@ export const DEFAULT_AGENT_SETTINGS: AgentSettings = {
   hideWorktreeMismatchDropWarning: false,
   archiveSpaceDeleteWorktreeByDefault: true,
   archiveSpaceDeleteBranchByDefault: false,
+  voice: DEFAULT_VOICE_SETTINGS,
 }

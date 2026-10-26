@@ -63,7 +63,7 @@ renderer: play chunks in order with WebAudio
 
 ### What gets spoken
 
-Each voice prompt gets one line appended: `(Voice request: end your reply with a line starting "SAY:" holding a 1-3 sentence spoken summary.)` The app speaks only the `SAY:` text. If the boss leaves it out, the app speaks the first 3 sentences of the reply.
+Each voice prompt gets this text appended on the same line, after a space: `(Voice request: end your reply with a line starting "SAY:" holding a 1-3 sentence spoken summary.)` It stays on one line because a newline inside an agent TUI prompt can submit early or open a multi-line editor. The app speaks only the last non-empty `SAY:` line, and accepts markdown decoration such as `**SAY:**`. If the boss leaves it out, the app speaks the first 3 sentences of the reply, without code blocks, headings, or markdown markers.
 
 ## Module layout (`src/contexts/voice/`)
 
@@ -95,7 +95,7 @@ The OpenAI Realtime engine implements the same port. Its `transcribe` and `speak
 
 `idle -> listening -> transcribing -> sending -> waiting -> speaking -> idle`
 
-Any state can go to `error(reason)` or `cancelled`. Releasing the key early cancels `listening`. Pressing the key during `speaking` stops playback and starts `listening`. Only one turn runs at a time. A standby event for a stale turn is ignored by matching a turn id.
+Any active state can go to `error(reason)` or `cancelled`. Releasing the key within 300 ms (`MIN_VOICE_HOLD_MS`) cancels `listening`, and so does window blur. Pressing the key during `speaking` stops playback and starts `listening`. Pressing during `waiting` also starts a new turn, so a boss on a long task never blocks the microphone. Pressing during `listening`, `transcribing`, or `sending` does nothing, so only one turn runs at a time. Every event carries a turn id, and an event for any turn but the active one is ignored. This is how a late standby from an abandoned turn is dropped. The machine is `reduceVoiceTurn` in `domain/voiceTurn.ts`.
 
 ## Settings (`agentSettings.voice`, durable user intent)
 
@@ -129,7 +129,7 @@ Push-to-talk is a new keybinding command `voice.pushToTalk`, default `Alt+X`. Us
 ## Plan
 
 1. Spike: `onnxruntime-node` + kokoro-js + Whisper inside an Electron `utilityProcess`, dev and packaged build. Done; see "Spike result".
-2. Domain and settings (pure code, unit tests).
+2. Domain and settings (pure code, unit tests). Done. The `voice.pushToTalk` keybinding moved to step 4, because adding a command needs Shortcuts labels and strings.
 3. Engine in the utility process and IPC.
-4. Renderer: capture, hook, indicator, settings page, en and zh-CN strings.
+4. Renderer: capture, hook, indicator, settings page, `voice.pushToTalk` keybinding, en and zh-CN strings.
 5. E2E, manual check, CHANGELOG.

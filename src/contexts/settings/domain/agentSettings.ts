@@ -53,6 +53,7 @@ import { normalizeWebsiteWindowPolicy } from './websiteWindowSettings'
 import { normalizeBrowserMode, normalizeBrowserSearchEngineId } from './browserSettings'
 import { DEFAULT_AGENT_SETTINGS } from './agentSettings.defaults'
 import { normalizeTerminalDisplayReference } from './terminalDisplayCalibration'
+import { normalizeVoiceSettings } from '../../voice/domain/voiceSettings'
 import type { AgentSettings, TaskTitleProvider } from './agentSettings.types'
 
 export {
@@ -476,6 +477,7 @@ export function normalizeAgentSettings(value: unknown): AgentSettings {
     hideWorktreeMismatchDropWarning,
     archiveSpaceDeleteWorktreeByDefault,
     archiveSpaceDeleteBranchByDefault,
+    voice: normalizeVoiceSettings(value.voice),
   }
 }
 
