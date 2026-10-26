@@ -126,6 +126,10 @@ export default defineConfig(({ command }) => {
               __dirname,
               'src/platform/process/ptyHost/windowsConsoleObserverEntry.ts',
             ),
+            voiceHost: resolve(
+              __dirname,
+              'src/contexts/voice/infrastructure/localEngine/voiceHostEntry.ts',
+            ),
           },
         },
       },
