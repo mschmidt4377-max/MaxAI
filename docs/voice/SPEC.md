@@ -63,7 +63,7 @@ The production CSP is `script-src 'self'` and `connect-src 'self'`. That blocks 
 ## Flow
 
 ```
-renderer: hold key -> getUserMedia -> MediaRecorder -> release -> decodeAudioData -> 16 kHz mono PCM
+renderer: hold key -> getUserMedia -> MediaStreamTrackProcessor (raw f32 frames) -> release -> resample to 16 kHz mono PCM
   -> IPC voice:transcribe -> utilityProcess (Whisper) -> text
 renderer: controlSurface session.writeNode(boss, text), wait 300 ms, write "\r"
 renderer: ptyEventHub.onSessionState(boss) sees working -> standby (only states after the Enter count)
@@ -93,7 +93,7 @@ Each voice prompt gets this text appended on the same line, after a space: `(Voi
 
 `AppShell.tsx` is at 497 of 500 lines, so the hook mounts through `AppShellOverlays`.
 
-The microphone uses MediaRecorder and resamples on release with `decodeAudioData` in a 16 kHz `OfflineAudioContext`. An AudioWorklet would need its own module URL; this path needs no extra script and no CSP change. The microphone is open only while the key is held.
+The microphone reads raw frames with `MediaStreamTrackProcessor` and resamples on release in a 16 kHz `OfflineAudioContext`. Rejected: MediaRecorder (a clip cut short by a slow mic start fails to decode; seen on macOS CI) and ScriptProcessorNode (tied to the audio output clock, which runs slow in a background window). An AudioWorklet would need its own module URL. The microphone is open only while the key is held, and a recording with no audio ends as `no-speech`.
 
 ### `VoiceEngine` port
 

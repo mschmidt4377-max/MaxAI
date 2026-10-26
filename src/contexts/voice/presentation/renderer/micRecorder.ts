@@ -2,51 +2,75 @@ const WHISPER_SAMPLE_RATE = 16_000
 
 export interface MicRecorder {
   start(): Promise<void>
-  /** Stops recording and returns mono PCM at 16 kHz. */
+  /** Stops recording and returns mono PCM at 16 kHz; empty when the mic never delivered audio. */
   stop(): Promise<Float32Array>
   cancel(): void
 }
 
-/**
- * Records with MediaRecorder and resamples on stop with decodeAudioData. An AudioWorklet would
- * need a separate module URL; this path needs no extra script and no CSP change.
- *
- * The microphone opens on start and closes on stop or cancel, so the OS mic indicator is only on
- * while the key is held.
- */
+/** Chromium's insertable-streams reader; lib.dom does not declare it yet. */
+declare const MediaStreamTrackProcessor: new (init: { track: MediaStreamTrack }) => {
+  readable: ReadableStream<AudioData>
+}
+
+interface Capture {
+  stream: MediaStream
+  frames: Float32Array[]
+  sampleRate: number
+  /** Settles once the track ends and every delivered frame is copied. */
+  drained: Promise<void>
+}
+
 interface RecordingSession {
-  ready: Promise<{ stream: MediaStream; recorder: MediaRecorder; chunks: Blob[] }>
+  ready: Promise<Capture>
   cancelled: boolean
 }
 
-function releaseStream(stream: MediaStream): void {
+function stopTracks(stream: MediaStream): void {
   for (const track of stream.getTracks()) {
     track.stop()
   }
 }
 
-async function openRecording(isCancelled: () => boolean): Promise<{
-  stream: MediaStream
-  recorder: MediaRecorder
-  chunks: Blob[]
-}> {
+/**
+ * Reads raw samples off the microphone track with MediaStreamTrackProcessor.
+ *
+ * Earlier versions failed in two ways: MediaRecorder had to decode a compressed clip, and a clip
+ * cut short by a slow mic start would not decode; ScriptProcessorNode depends on the audio output
+ * clock, which runs slow or stalls in a background window. This reader is neither. It needs no
+ * worklet module, so it needs no extra script and no CSP change.
+ */
+async function openCapture(isCancelled: () => boolean): Promise<Capture> {
   const stream = await navigator.mediaDevices.getUserMedia({
     audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true },
   })
-  const recorder = new MediaRecorder(stream)
-  const chunks: Blob[] = []
-  recorder.addEventListener('dataavailable', event => {
-    if (event.data.size > 0) {
-      chunks.push(event.data)
-    }
-  })
+  const capture: Capture = {
+    stream,
+    frames: [],
+    sampleRate: WHISPER_SAMPLE_RATE,
+    drained: Promise.resolve(),
+  }
   // A cancel can land while getUserMedia is still pending.
   if (isCancelled()) {
-    releaseStream(stream)
-  } else {
-    recorder.start()
+    stopTracks(stream)
+    return capture
   }
-  return { stream, recorder, chunks }
+  const reader = new MediaStreamTrackProcessor({
+    track: stream.getAudioTracks()[0],
+  }).readable.getReader()
+  const pump = async (): Promise<void> => {
+    const { value, done } = await reader.read()
+    if (done) {
+      return
+    }
+    const samples = new Float32Array(value.numberOfFrames)
+    value.copyTo(samples, { planeIndex: 0, format: 'f32-planar' })
+    capture.sampleRate = value.sampleRate
+    capture.frames.push(samples)
+    value.close()
+    return pump()
+  }
+  capture.drained = pump().catch(() => {})
+  return capture
 }
 
 export function createMicRecorder(): MicRecorder {
@@ -56,7 +80,7 @@ export function createMicRecorder(): MicRecorder {
     start: () => {
       const current: RecordingSession = {
         cancelled: false,
-        ready: openRecording(() => current.cancelled),
+        ready: openCapture(() => current.cancelled),
       }
       session = current
       return current.ready.then(() => undefined)
@@ -67,14 +91,11 @@ export function createMicRecorder(): MicRecorder {
       if (!current) {
         throw new Error('The microphone is not recording.')
       }
-      const { stream, recorder, chunks } = await current.ready
-      const stopped = new Promise<void>(resolve =>
-        recorder.addEventListener('stop', () => resolve(), { once: true }),
-      )
-      recorder.stop()
-      await stopped
-      releaseStream(stream)
-      return decodeToPcm16k(new Blob(chunks, { type: recorder.mimeType }))
+      const capture = await current.ready
+      // Ending the track ends the reader, so `drained` settles after the last frame.
+      stopTracks(capture.stream)
+      await capture.drained
+      return resampleTo16k(joinFrames(capture.frames), capture.sampleRate)
     },
     cancel: () => {
       const current = session
@@ -83,31 +104,33 @@ export function createMicRecorder(): MicRecorder {
         return
       }
       current.cancelled = true
-      void current.ready
-        .then(({ stream, recorder }) => {
-          if (recorder.state !== 'inactive') {
-            recorder.stop()
-          }
-          releaseStream(stream)
-        })
-        .catch(() => {})
+      void current.ready.then(capture => stopTracks(capture.stream)).catch(() => {})
     },
   }
 }
 
-async function decodeToPcm16k(blob: Blob): Promise<Float32Array> {
-  // decodeAudioData resamples to the context rate, so a 16 kHz context gives Whisper's input rate.
-  const context = new OfflineAudioContext(1, 1, WHISPER_SAMPLE_RATE)
-  const audio = await context.decodeAudioData(await blob.arrayBuffer())
-  if (audio.numberOfChannels === 1) {
-    return audio.getChannelData(0)
+function joinFrames(frames: readonly Float32Array[]): Float32Array {
+  const joined = new Float32Array(frames.reduce((total, frame) => total + frame.length, 0))
+  let offset = 0
+  for (const frame of frames) {
+    joined.set(frame, offset)
+    offset += frame.length
   }
-  const mono = new Float32Array(audio.length)
-  for (let channel = 0; channel < audio.numberOfChannels; channel += 1) {
-    const samples = audio.getChannelData(channel)
-    for (let index = 0; index < mono.length; index += 1) {
-      mono[index] += samples[index] / audio.numberOfChannels
-    }
+  return joined
+}
+
+async function resampleTo16k(samples: Float32Array, sampleRate: number): Promise<Float32Array> {
+  if (samples.length === 0 || sampleRate === WHISPER_SAMPLE_RATE) {
+    return samples
   }
-  return mono
+  const length = Math.max(1, Math.round((samples.length * WHISPER_SAMPLE_RATE) / sampleRate))
+  // Offline rendering runs as fast as it can, independent of any audio output clock.
+  const offline = new OfflineAudioContext(1, length, WHISPER_SAMPLE_RATE)
+  const buffer = offline.createBuffer(1, samples.length, sampleRate)
+  buffer.getChannelData(0).set(samples)
+  const source = offline.createBufferSource()
+  source.buffer = buffer
+  source.connect(offline.destination)
+  source.start()
+  return (await offline.startRendering()).getChannelData(0)
 }

@@ -79,7 +79,8 @@ export function createVoiceTurnController(ports: VoiceTurnPorts): VoiceTurnContr
     let transcript: string
     try {
       const pcm = await ports.stopRecording()
-      transcript = await ports.transcribe(pcm)
+      // A mic that delivered nothing heard nothing: an empty transcript becomes `no-speech`.
+      transcript = pcm.length === 0 ? '' : await ports.transcribe(pcm)
     } catch {
       fail(current, 'transcribe-failed')
       return

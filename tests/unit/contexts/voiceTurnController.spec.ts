@@ -157,6 +157,15 @@ describe('createVoiceTurnController', () => {
     expect(controller.getState()).toMatchObject({ phase: 'error', reason: 'mic-failed' })
   })
 
+  it('reports no-speech without transcribing when the mic delivered no audio', async () => {
+    const { controller, ports, hold } = setup({
+      stopRecording: vi.fn(async () => new Float32Array(0)),
+    })
+    await hold()
+    expect(controller.getState()).toMatchObject({ phase: 'error', reason: 'no-speech' })
+    expect(ports.transcribe).not.toHaveBeenCalled()
+  })
+
   it('reports no-speech for an empty transcript', async () => {
     const { controller, ports, hold } = setup({ transcribe: vi.fn(async () => '  ') })
     await hold()
