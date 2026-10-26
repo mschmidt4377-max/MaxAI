@@ -1,6 +1,6 @@
 # Voice Control ("Jarvis") Spec
 
-Status: approved 2026-10-25 (hotkey changed to Alt+X, rebindable). Plan step 1 (spike) done.
+Status: approved 2026-10-25 (hotkey changed to Alt+X, rebindable). Plan steps 1 to 4 done.
 
 ## Goal
 
@@ -63,11 +63,12 @@ The production CSP is `script-src 'self'` and `connect-src 'self'`. That blocks 
 ## Flow
 
 ```
-renderer: hold key -> getUserMedia -> AudioWorklet -> 16 kHz mono PCM
+renderer: hold key -> getUserMedia -> MediaRecorder -> release -> decodeAudioData -> 16 kHz mono PCM
   -> IPC voice:transcribe -> utilityProcess (Whisper) -> text
 renderer: controlSurface session.writeNode(boss, text), wait 300 ms, write "\r"
-renderer: ptyEventHub.onSessionState(boss) sees working -> standby
-  -> session.finalMessage (retry 5 x 220 ms) -> reply text -> pick spoken part
+renderer: ptyEventHub.onSessionState(boss) sees working -> standby (only states after the Enter count)
+  -> session.finalMessage (retry 5 x 220 ms until it differs from the reply before the prompt)
+  -> reply text -> pick spoken part
   -> IPC voice:speak -> utilityProcess (Kokoro) streams one audio chunk per sentence
 renderer: play chunks in order with WebAudio
 ```
@@ -81,12 +82,14 @@ Each voice prompt gets this text appended on the same line, after a space: `(Voi
 | Layer | Contents |
 | --- | --- |
 | `domain` | `VoiceSettings` type, defaults, `normalizeVoiceSettings`; `VoiceTurnState` machine; `splitIntoSentences`; `pickSpokenText` (SAY: line or first 3 sentences) |
-| `application` | `VoiceEngine` port; `VoiceService`, the owner of the model load state (`idle`, `loading`, `ready`, `error`); `runVoiceTurn` use case that drives one turn through the state machine |
+| `application` | `VoiceEngine` port; `VoiceService`, the owner of the model load state (`idle`, `loading`, `ready`, `error`); `createVoiceTurnController`, which drives each turn through the state machine and runs its side effects behind injected ports |
 | `infrastructure` | `localEngine/`: `LocalVoiceEngine` (main side) forks `voiceHostEntry` in a `utilityProcess` (Whisper + Kokoro, model cache under userData `models/`); `voiceHostHandler` runs requests one at a time there |
 | `presentation/main-ipc` | Invoke: `voice:prepare`, `voice:get-status`, `voice:transcribe`, `voice:speak`, `voice:cancel-speak`. Events: `voice:status` (to all windows), `voice:speak-chunk` (to the requesting window). All payloads are validated at the boundary |
-| `presentation/renderer` | `voiceApi.ts` (the only file touching `window.opencoveApi`), `useVoiceAssistant` hook (key down/up, blur cancels), `VoiceIndicator` overlay, `VoiceSection` settings page |
+| `presentation/renderer` | `voiceApi.ts` (the only file touching `window.opencoveApi`), `micRecorder`, `speechPlayer`, `bossChannel` (`askBoss`, `listVoiceBossAgents`), `useVoiceAssistant` hook (key down/up, blur cancels), `VoiceIndicator` overlay, `VoiceSection` (the Voice tab of Settings > Agent) |
 
 `AppShell.tsx` is at 497 of 500 lines, so the hook mounts through `AppShellOverlays`.
+
+The microphone uses MediaRecorder and resamples on release with `decodeAudioData` in a 16 kHz `OfflineAudioContext`. An AudioWorklet would need its own module URL; this path needs no extra script and no CSP change. The microphone is open only while the key is held.
 
 ### `VoiceEngine` port
 
@@ -109,7 +112,7 @@ The OpenAI Realtime engine implements the same port. Its `transcribe` and `speak
 
 `idle -> listening -> transcribing -> sending -> waiting -> speaking -> idle`
 
-Any active state can go to `error(reason)` or `cancelled`. Releasing the key within 300 ms (`MIN_VOICE_HOLD_MS`) cancels `listening`, and so does window blur. Pressing the key during `speaking` stops playback and starts `listening`. Pressing during `waiting` also starts a new turn, so a boss on a long task never blocks the microphone. Pressing during `listening`, `transcribing`, or `sending` does nothing, so only one turn runs at a time. Every event carries a turn id, and an event for any turn but the active one is ignored. This is how a late standby from an abandoned turn is dropped. The machine is `reduceVoiceTurn` in `domain/voiceTurn.ts`.
+Any active state can go to `error(reason)` or `cancelled`. Reasons: `no-speech`, `no-boss` (no boss chosen, or its node was closed; the microphone never opens), `mic-failed`, `transcribe-failed`, `send-failed`, `speak-failed`. Releasing the key within 300 ms (`MIN_VOICE_HOLD_MS`) cancels `listening`, and so does window blur. Pressing the key during `speaking` stops playback and starts `listening`. Pressing during `waiting` also starts a new turn, so a boss on a long task never blocks the microphone. Pressing during `listening`, `transcribing`, or `sending` does nothing, so only one turn runs at a time. Every event carries a turn id, and an event for any turn but the active one is ignored. This is how a late standby from an abandoned turn is dropped. The machine is `reduceVoiceTurn` in `domain/voiceTurn.ts`.
 
 ## Settings (`agentSettings.voice`, durable user intent)
 
@@ -145,5 +148,5 @@ Push-to-talk is a new keybinding command `voice.pushToTalk`, default `Alt+X`. Us
 1. Spike: `onnxruntime-node` + kokoro-js + Whisper inside an Electron `utilityProcess`, dev and packaged build. Done; see "Spike result".
 2. Domain and settings (pure code, unit tests). Done. The `voice.pushToTalk` keybinding moved to step 4, because adding a command needs Shortcuts labels and strings.
 3. Engine in the utility process and IPC. Done.
-4. Renderer: capture, hook, indicator, settings page, `voice.pushToTalk` keybinding, en and zh-CN strings.
+4. Renderer: capture, hook, indicator, settings page, `voice.pushToTalk` keybinding, en and zh-CN strings. Done.
 5. E2E, manual check, CHANGELOG.

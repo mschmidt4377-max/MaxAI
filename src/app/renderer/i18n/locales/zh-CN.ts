@@ -8,6 +8,7 @@ import { zhCNSidebarRail } from './zh-CN.sidebarRail'
 import { zhCNCanvasCollapse } from './zh-CN.canvasCollapse'
 import { zhCNControlCenter } from './zh-CN.controlCenter'
 import { zhCNSpaceCollapse } from './zh-CN.spaceCollapse'
+import { zhCNVoice } from './zh-CN.voice'
 import { zhCNShell } from './zh-CN.shell'
 import { zhCNSpaceExplorer } from './zh-CN.spaceExplorer'
 import { zhCNSettingsPanel } from './zh-CN.settingsPanel'
@@ -34,6 +35,7 @@ export const zhCN = {
   ...zhCNCanvasCollapse,
   ...zhCNControlCenter,
   ...zhCNSpaceCollapse,
+  ...zhCNVoice,
   common: {
     actions: '操作',
     back: '返回',

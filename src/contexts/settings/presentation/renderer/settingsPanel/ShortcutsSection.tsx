@@ -4,6 +4,7 @@ import { useTranslation } from '@app/renderer/i18n'
 import {
   APP_COMMAND_IDS,
   COMMAND_IDS,
+  VOICE_COMMAND_IDS,
   WORKSPACE_CANVAS_COMMAND_IDS,
   isSupportedKeybindingChord,
   resolveEffectiveKeybindings,
@@ -109,6 +110,12 @@ export function ShortcutsSection({
         title: t('settingsPanel.shortcuts.groups.workspaceCanvas.title'),
         help: t('settingsPanel.shortcuts.groups.workspaceCanvas.help'),
         commandIds: workspaceCanvasCommandIds,
+      },
+      {
+        id: 'voice',
+        title: t('settingsPanel.shortcuts.groups.voice.title'),
+        help: t('settingsPanel.shortcuts.groups.voice.help'),
+        commandIds: VOICE_COMMAND_IDS,
       },
     ],
     [t, workspaceCanvasCommandIds],

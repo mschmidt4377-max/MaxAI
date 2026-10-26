@@ -8,7 +8,13 @@
  * - An ignored event returns the same state object, so callers can detect a no-op by identity.
  */
 
-export type VoiceErrorReason = 'no-speech' | 'transcribe-failed' | 'send-failed' | 'speak-failed'
+export type VoiceErrorReason =
+  | 'no-speech'
+  | 'no-boss'
+  | 'mic-failed'
+  | 'transcribe-failed'
+  | 'send-failed'
+  | 'speak-failed'
 
 export type VoiceTurnState =
   | { readonly phase: 'idle' }

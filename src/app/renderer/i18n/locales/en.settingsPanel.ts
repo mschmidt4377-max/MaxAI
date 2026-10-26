@@ -9,6 +9,7 @@ import { enSettingsPanelDiagnostics } from './en.settingsPanel.diagnostics'
 import { enSettingsPanelLayout } from './en.settingsPanel.layout'
 import { enSettingsPanelWorkspace } from './en.settingsPanel.workspace'
 import { enWorkspaceCanvasNavigationShortcutCommands } from './en.settingsPanel.shortcuts.workspaceCanvasNavigation'
+import { enVoiceShortcuts } from './en.voice'
 
 export const enSettingsPanel = {
   plugins: enSettingsPanelPlugins,
@@ -335,6 +336,7 @@ export const enSettingsPanel = {
         title: 'Workspace Canvas',
         help: 'Canvas shortcuts for creating nodes and switching spaces.',
       },
+      voice: enVoiceShortcuts.group,
     },
     commands: {
       commandCenterToggle: {
@@ -390,6 +392,7 @@ export const enSettingsPanel = {
         help: 'Switch to the previous space with no working agent.',
       },
       ...enWorkspaceCanvasNavigationShortcutCommands,
+      voicePushToTalk: enVoiceShortcuts.command,
     },
   },
   tasks: {
