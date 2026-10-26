@@ -69,11 +69,8 @@ export function VoiceIndicator({
   // Model loading shows whatever the turn is doing, so the first use explains the wait.
   const loading =
     engine.state === 'loading'
-      ? engine.file && engine.progress !== null
-        ? t('voice.indicator.downloadingModel', {
-            file: engine.file,
-            percent: Math.round(engine.progress * 100),
-          })
+      ? engine.progress !== null
+        ? t('voice.indicator.downloadingModels', { percent: Math.round(engine.progress * 100) })
         : t('voice.indicator.loadingModels')
       : null
 

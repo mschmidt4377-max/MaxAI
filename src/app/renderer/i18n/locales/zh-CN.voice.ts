@@ -34,7 +34,7 @@ export const zhCNVoice = {
     },
     indicator: {
       loadingModels: '正在加载语音模型…',
-      downloadingModel: '正在下载 {{file}}（{{percent}}%）',
+      downloadingModels: '正在下载语音模型：{{percent}}%',
       listening: '正在聆听…',
       transcribing: '正在识别…',
       sending: '正在发送给 {{boss}}',

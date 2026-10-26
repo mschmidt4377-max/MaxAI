@@ -49,7 +49,7 @@ export class LocalVoiceEngine implements VoiceEngine {
         {
           onReply: reply => {
             if (reply.type === 'progress') {
-              onProgress({ file: reply.file, progress: reply.progress })
+              onProgress({ progress: reply.progress })
             } else if (reply.type === 'done') {
               this.prepared = true
               resolve()

@@ -46,7 +46,7 @@ describe('VoiceService', () => {
 
   it('ignores progress and results from a load the engine abandoned', async () => {
     let finishStale: () => void = () => {}
-    let staleProgress: (p: { file: string | null; progress: number | null }) => void = () => {}
+    let staleProgress: (p: { progress: number }) => void = () => {}
     const { engine, emitUnavailable } = createEngine(
       onProgress =>
         new Promise<void>(resolve => {
@@ -60,7 +60,7 @@ describe('VoiceService', () => {
 
     const stale = service.prepare()
     emitUnavailable('process exited')
-    staleProgress({ file: 'x', progress: 0.9 })
+    staleProgress({ progress: 0.9 })
     finishStale()
     await stale
 

@@ -36,7 +36,7 @@ export const enVoice = {
     },
     indicator: {
       loadingModels: 'Loading voice models…',
-      downloadingModel: 'Downloading {{file}} ({{percent}}%)',
+      downloadingModels: 'Downloading voice models: {{percent}}%',
       listening: 'Listening…',
       transcribing: 'Transcribing…',
       sending: 'Sending to {{boss}}',

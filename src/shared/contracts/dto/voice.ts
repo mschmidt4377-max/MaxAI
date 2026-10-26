@@ -1,8 +1,8 @@
 /** Model loading state of the voice engine, owned by the main process. */
 export type VoiceEngineStatus =
   | { state: 'idle' }
-  /** progress is 0..1 for the file being downloaded, or null while loading from cache. */
-  | { state: 'loading'; file: string | null; progress: number | null }
+  /** progress is 0..1 across all model downloads, or null until a download reports bytes. */
+  | { state: 'loading'; progress: number | null }
   | { state: 'ready' }
   | { state: 'error'; message: string }
 

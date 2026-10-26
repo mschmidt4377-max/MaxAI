@@ -17,7 +17,7 @@ export type VoiceHostRequest =
   | { type: 'cancel'; id: string }
 
 export type VoiceHostReply =
-  | { type: 'progress'; id: string; file: string | null; progress: number | null }
+  | { type: 'progress'; id: string; progress: number }
   | { type: 'chunk'; id: string; index: number; sampleRate: number; samples: Float32Array }
   | { type: 'done'; id: string; text?: string }
   | { type: 'error'; id: string; message: string }

@@ -70,10 +70,10 @@ describe('LocalVoiceEngine', () => {
     const [host] = ctx.processes
     expect(host.posted).toEqual([{ type: 'prepare', id: 'r1', cacheDir: 'C:/userData/models' }])
 
-    host.reply({ type: 'progress', id: 'r1', file: 'model.onnx', progress: 0.5 })
+    host.reply({ type: 'progress', id: 'r1', progress: 0.5 })
     host.reply({ type: 'done', id: 'r1' })
     await preparing
-    expect(progress).toHaveBeenCalledWith({ file: 'model.onnx', progress: 0.5 })
+    expect(progress).toHaveBeenCalledWith({ progress: 0.5 })
   })
 
   it('resolves transcribe with the host text and rejects on host error', async () => {

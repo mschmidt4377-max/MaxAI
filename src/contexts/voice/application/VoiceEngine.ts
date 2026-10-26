@@ -1,9 +1,8 @@
 import type { KokoroVoiceId, VoiceEngineId } from '../domain/voiceSettings'
 
 export interface VoiceModelProgress {
-  file: string | null
-  /** 0..1 while a file downloads, null while a cached file loads. */
-  progress: number | null
+  /** 0..1 across every model file being downloaded. */
+  progress: number
 }
 
 export interface VoiceAudioChunk {

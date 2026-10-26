@@ -52,7 +52,7 @@ export class VoiceService {
     const attempt = {}
     this.loadAttempt = attempt
     const isCurrent = (): boolean => this.loadAttempt === attempt
-    this.setStatus({ state: 'loading', file: null, progress: null })
+    this.setStatus({ state: 'loading', progress: null })
     try {
       await this.engine.prepare(progress => {
         if (isCurrent()) {

@@ -1,6 +1,7 @@
-import { env, pipeline, type ProgressInfo } from '@huggingface/transformers'
+import { env, pipeline } from '@huggingface/transformers'
 import { KokoroTTS } from 'kokoro-js'
 import type { KokoroVoiceId } from '../../domain/voiceSettings'
+import { createDownloadProgressTracker } from './downloadProgress'
 import type { VoiceModelLoader } from './voiceHostHandler'
 import { KOKORO_DTYPE, KOKORO_MODEL_ID, WHISPER_DTYPE, WHISPER_MODEL_ID } from './voiceHostProtocol'
 
@@ -9,13 +10,7 @@ export const loadVoiceModels: VoiceModelLoader = async (cacheDir, onProgress) =>
   // The default cache sits inside the package folder, which is read-only in a packaged app.
   env.cacheDir = cacheDir
 
-  const progress_callback = (info: ProgressInfo): void => {
-    if (info.status === 'progress') {
-      onProgress(info.file, info.progress / 100)
-    } else if (info.status === 'initiate') {
-      onProgress(info.file, null)
-    }
-  }
+  const progress_callback = createDownloadProgressTracker(onProgress)
 
   const [tts, asr] = await Promise.all([
     KokoroTTS.from_pretrained(KOKORO_MODEL_ID, {

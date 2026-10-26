@@ -8,7 +8,7 @@ export interface VoiceModels {
 
 export type VoiceModelLoader = (
   cacheDir: string,
-  onProgress: (file: string | null, progress: number | null) => void,
+  onProgress: (progress: number) => void,
 ) => Promise<VoiceModels>
 
 /**
@@ -30,8 +30,8 @@ export function createVoiceHostHandler(options: {
     try {
       if (request.type === 'prepare') {
         if (!models) {
-          models = options.loadModels(request.cacheDir, (file, progress) =>
-            options.send({ type: 'progress', id, file, progress }),
+          models = options.loadModels(request.cacheDir, progress =>
+            options.send({ type: 'progress', id, progress }),
           )
           models.catch(() => {
             models = null

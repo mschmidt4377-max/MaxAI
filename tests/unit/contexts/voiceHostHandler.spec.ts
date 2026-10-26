@@ -27,12 +27,10 @@ const PREPARE = { type: 'prepare', id: 'p1', cacheDir: 'C:/models' } as const
 
 describe('voice host handler', () => {
   it('loads models once and reports progress to the requester', async () => {
-    const loadModels = vi.fn(
-      async (_cacheDir: string, onProgress: (f: string | null, p: number | null) => void) => {
-        onProgress('model_fp16.onnx', 0.25)
-        return createModels()
-      },
-    )
+    const loadModels = vi.fn(async (_cacheDir: string, onProgress: (progress: number) => void) => {
+      onProgress(0.25)
+      return createModels()
+    })
     const { handle, replies } = setup(loadModels)
 
     await handle(PREPARE)
@@ -41,7 +39,7 @@ describe('voice host handler', () => {
     expect(loadModels).toHaveBeenCalledTimes(1)
     expect(loadModels).toHaveBeenCalledWith('C:/models', expect.any(Function))
     expect(replies).toEqual([
-      { type: 'progress', id: 'p1', file: 'model_fp16.onnx', progress: 0.25 },
+      { type: 'progress', id: 'p1', progress: 0.25 },
       { type: 'done', id: 'p1' },
       { type: 'done', id: 'p2' },
     ])

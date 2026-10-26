@@ -44,7 +44,7 @@ function createFakeEngine() {
   const engine: VoiceEngine = {
     id: 'local',
     prepare: vi.fn(async onProgress => {
-      onProgress({ file: 'model_fp16.onnx', progress: 0.5 })
+      onProgress({ progress: 0.5 })
     }),
     transcribe: vi.fn(async (pcm16k: Float32Array) => ` heard ${pcm16k.length} samples `),
     speak: async function* (_text, _voice, signal) {
@@ -108,8 +108,8 @@ describe('voice IPC handlers', () => {
     expect(second).toEqual({ state: 'ready' })
     expect(engine.prepare).toHaveBeenCalledTimes(1)
     expect(windowSend.mock.calls).toEqual([
-      [IPC_CHANNELS.voiceStatus, { state: 'loading', file: null, progress: null }],
-      [IPC_CHANNELS.voiceStatus, { state: 'loading', file: 'model_fp16.onnx', progress: 0.5 }],
+      [IPC_CHANNELS.voiceStatus, { state: 'loading', progress: null }],
+      [IPC_CHANNELS.voiceStatus, { state: 'loading', progress: 0.5 }],
       [IPC_CHANNELS.voiceStatus, { state: 'ready' }],
     ])
     await expect(invoke(IPC_CHANNELS.voiceGetStatus)).resolves.toEqual({ state: 'ready' })
