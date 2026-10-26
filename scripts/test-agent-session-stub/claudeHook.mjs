@@ -174,7 +174,8 @@ export async function runClaudeHookVoiceReplyScenario(cwd) {
           void operation.then(resolveRun)
           return
         }
-        if (character !== '\r') {
+        // A cooked Unix TTY turns the submitted \r into \n; Windows ConPTY passes \r through.
+        if (character !== '\r' && character !== '\n') {
           line += character
           continue
         }
@@ -184,7 +185,10 @@ export async function runClaudeHookVoiceReplyScenario(cwd) {
           continue
         }
         operation = operation.then(async () => {
-          process.stdout.write(`[opencove-test-voice] prompt: ${prompt}\n`)
+          // Short lines, so a narrow test terminal never wraps the text the E2E looks for.
+          const [heard, instruction] = prompt.split(' (Voice request:')
+          process.stdout.write(`[opencove-test-voice] heard: ${heard}\n`)
+          process.stdout.write(`[opencove-test-voice] instruction: ${instruction !== undefined}\n`)
           await postHook(raw('UserPromptSubmit'))
           await new Promise(resolveDelay => setTimeout(resolveDelay, 150))
           await postHook({ ...raw('Stop'), last_assistant_message: VOICE_REPLY })

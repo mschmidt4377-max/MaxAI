@@ -92,9 +92,8 @@ test.describe('Voice - push to talk', () => {
       await expect(indicator).toHaveAttribute('data-voice-phase', 'cancelled')
 
       await holdPushToTalk(window, 600)
-      await expect(agentNode).toContainText(
-        '[opencove-test-voice] prompt: list the agents (Voice request:',
-      )
+      await expect(agentNode).toContainText('[opencove-test-voice] heard: list the agents')
+      await expect(agentNode).toContainText('[opencove-test-voice] instruction: true')
       await expect(agentNode).toContainText('[opencove-test-voice] replied')
       await expect
         .poll(async () => await electronApp.evaluate(() => globalThis.__opencoveTestVoiceSpoken))
