@@ -1,6 +1,6 @@
 # Voice Control ("Jarvis") Spec
 
-Status: approved 2026-10-25 (hotkey changed to Alt+X, rebindable). Build not started.
+Status: approved 2026-10-25 (hotkey changed to Alt+X, rebindable). Plan step 1 (spike) done.
 
 ## Goal
 
@@ -23,7 +23,27 @@ The first engine is free and local: Whisper hears, Kokoro speaks. A paid OpenAI 
 
 Kokoro runs at about real time on this CPU. Speaking sentence by sentence (play sentence n while making sentence n+1) gets the first audio out in 1 to 2 s.
 
-Not yet verified: running `onnxruntime-node` inside an Electron `utilityProcess`. That is step 1 of the plan.
+### Spike result: `utilityProcess` (plan step 1, done 2026-10-25)
+
+Electron 41.5.1, `@huggingface/transformers` 3.8.1, `kokoro-js` 1.2.1, `onnxruntime-node` 1.21.0. The host was a CommonJS file loaded with `require`, the same form electron-vite emits for main entries.
+
+| Check | Dev (`electron.exe <dir>`) | Packaged (`electron-builder --dir`, asar) |
+| --- | --- | --- |
+| `onnxruntime-node` loads, transformers picks the `onnx` backend | yes | yes |
+| Model load (from local cache) | Kokoro 1.3 s, Whisper 1.4 s | Kokoro 1.1 s, Whisper 1.2 s |
+| First sentence audio ready | 2.4 s | 2.3 s |
+| Whisper on 8.6 s of audio | 1.0 s, exact transcript | 1.1 s, exact transcript |
+| Worst main-thread event-loop lag during inference | 15 ms | 16 ms |
+
+Facts the build must respect:
+
+- `process.release.name` is `node` in a `utilityProcess`, so transformers uses `onnxruntime-node`, not WASM.
+- `Float32Array` audio crosses `process.parentPort.postMessage` as a `Float32Array`. No manual encoding is needed.
+- electron-builder's default smart unpack puts `onnxruntime-node` and `@img/sharp-win32-x64` (a transformers dependency loaded at import) into `app.asar.unpacked`. No `asarUnpack` rule is needed.
+- kokoro-js reads voice files from its own package with `fs`. That works from inside the asar.
+- The transformers default cache is inside its own package folder, which is read-only in the asar. The engine must set `env.cacheDir` to userData `models/`.
+- The unpacked folder carries `onnxruntime-node` binaries for every OS (about 200 MB). The release build should exclude the other platforms.
+- Kokoro speed is the same in plain Node 26 and in the `utilityProcess`: about 1.3 s of compute per 1 s of audio for short sentences. The first sentence plays within 2.5 s, but there are gaps between later sentences. Step 3 should measure `fp32` against `q8` and tune ONNX thread counts before relying on sentence pipelining alone.
 
 ## Why the models run outside the renderer
 
@@ -108,7 +128,7 @@ Push-to-talk is a new keybinding command `voice.pushToTalk`, default `Alt+X`. Us
 
 ## Plan
 
-1. Spike: `onnxruntime-node` + kokoro-js + Whisper inside an Electron `utilityProcess`, dev and packaged build.
+1. Spike: `onnxruntime-node` + kokoro-js + Whisper inside an Electron `utilityProcess`, dev and packaged build. Done; see "Spike result".
 2. Domain and settings (pure code, unit tests).
 3. Engine in the utility process and IPC.
 4. Renderer: capture, hook, indicator, settings page, en and zh-CN strings.
