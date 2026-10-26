@@ -158,6 +158,7 @@ export function useAgentStandbyNotifications({
     state => state.agentSettings.systemNotificationsEnabled,
   )
   const isStandbyBannerEnabled = useAppStore(state => state.agentSettings.standbyBannerEnabled)
+  const voice = useAppStore(state => state.agentSettings.voice)
   const showBranch = useAppStore(state => state.agentSettings.standbyBannerShowBranch)
   const showPullRequest = useAppStore(state => state.agentSettings.standbyBannerShowPullRequest)
   const githubPullRequestsEnabled = useAppStore(
@@ -273,6 +274,10 @@ export function useAgentStandbyNotifications({
       if (!isStandbyBannerEnabled && !areSystemNotificationsEnabled) {
         return
       }
+      // Voice reads the boss's reply aloud; a banner too would announce the same finish twice.
+      if (voice.enabled && voice.speakReplies && payload.nodeId === voice.bossNodeId) {
+        return
+      }
 
       const workspace = workspacesById.get(payload.workspaceId) ?? null
       const taskTitle = resolveTaskTitle(workspace, payload.taskId)
@@ -322,7 +327,7 @@ export function useAgentStandbyNotifications({
         return updated.length > maxVisible ? updated.slice(0, maxVisible) : updated
       })
     },
-    [areSystemNotificationsEnabled, isStandbyBannerEnabled, maxVisible, t, workspacesById],
+    [areSystemNotificationsEnabled, isStandbyBannerEnabled, maxVisible, t, voice, workspacesById],
   )
 
   const { deferUntilTitleReady: handleAgentEnteredStandby, cancelPendingTitle } =

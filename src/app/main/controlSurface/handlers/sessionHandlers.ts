@@ -96,6 +96,7 @@ export function registerSessionHandlers(
     terminalSpawnAdmission: TerminalSpawnAdmission
     terminalRecoverySpawnAdmission: TerminalRecoverySpawnAdmission
     agentProviderRegistry: AgentProviderRegistry
+    readHookFinalMessage?: (sessionId: string) => string | null
   },
 ): void {
   const sessions = new Map<string, SessionRecord>()
@@ -465,7 +466,11 @@ export function registerSessionHandlers(
     defaultErrorCode: 'common.unexpected',
   })
 
-  registerSessionFinalMessageHandler(controlSurface, { sessions, topology: deps.topology })
+  registerSessionFinalMessageHandler(controlSurface, {
+    sessions,
+    topology: deps.topology,
+    readHookFinalMessage: deps.readHookFinalMessage,
+  })
 
   controlSurface.register('session.kill', {
     kind: 'command',

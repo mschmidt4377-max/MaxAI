@@ -240,6 +240,8 @@ export function createControlSurfaceHttpRuntime(
     terminalRecoverySpawnAdmission: terminalRuntimeAvailability,
     agentProviderRegistry,
     terminalAgentActivity: terminalAgents.activity,
+    readHookFinalMessage: sessionId =>
+      agentHookChannels.map(channel => channel.getFinalMessage(sessionId)).find(Boolean) ?? null,
   })
 
   let closed = false

@@ -48,7 +48,12 @@ function normalizeSessionIdPayload(payload: unknown): GetSessionFinalMessageInpu
 
 export function registerSessionFinalMessageHandler(
   controlSurface: ControlSurface,
-  deps: { sessions: Map<string, SessionRecord>; topology: WorkerTopologyStore },
+  deps: {
+    sessions: Map<string, SessionRecord>
+    topology: WorkerTopologyStore
+    /** The reply a provider's turn-end hook reported; preferred over reading its session file. */
+    readHookFinalMessage?: (sessionId: string) => string | null
+  },
 ): void {
   controlSurface.register('session.finalMessage', {
     kind: 'query',
@@ -91,6 +96,18 @@ export function registerSessionFinalMessageHandler(
         }
 
         return { ...value, sessionId: record.sessionId }
+      }
+
+      const hookMessage = deps.readHookFinalMessage?.(record.sessionId) ?? null
+      if (hookMessage !== null) {
+        return {
+          sessionId: record.sessionId,
+          provider: record.provider,
+          startedAt: record.startedAt,
+          cwd: record.cwd,
+          resumeSessionId: record.resumeSessionId ?? null,
+          message: hookMessage,
+        }
       }
 
       const startedAtMs = record.startedAtMs

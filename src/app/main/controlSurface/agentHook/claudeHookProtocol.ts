@@ -17,6 +17,8 @@ export interface ClaudeHookEnvelope {
   state: ClaudeHookTurnState | null
   hookEventName: string
   claudeSessionId: string
+  /** Claude's `Stop` hook carries the reply it just finished. */
+  lastAssistantMessage?: string
   tool?: {
     name: string
     useId: string | null
@@ -167,12 +169,19 @@ export function normalizeClaudeHookEnvelope(value: unknown): ClaudeHookEnvelope 
   if (state === undefined) {
     return null
   }
+  const lastAssistantMessage =
+    hookEventName === 'Stop' &&
+    typeof value.last_assistant_message === 'string' &&
+    value.last_assistant_message.trim().length > 0
+      ? value.last_assistant_message
+      : null
 
   return {
     version: 1,
     state,
     hookEventName,
     claudeSessionId,
+    ...(lastAssistantMessage ? { lastAssistantMessage } : {}),
     ...(toolName
       ? {
           tool: {
