@@ -3,8 +3,12 @@ import { join, resolve } from 'node:path'
 import { VoiceService } from '../../../contexts/voice/application/VoiceService'
 import { LocalVoiceEngine } from '../../../contexts/voice/infrastructure/localEngine/LocalVoiceEngine'
 import { createElectronUtilityPtyHostProcess } from '../../../platform/process/ptyHost/electronUtilityProcessAdapter'
+import { createTestVoiceEngine, isTestVoiceEngineRequested } from './createTestVoiceEngine'
 
 export function createMainVoiceService(): VoiceService {
+  if (isTestVoiceEngineRequested()) {
+    return new VoiceService(createTestVoiceEngine())
+  }
   return new VoiceService(
     new LocalVoiceEngine({
       cacheDir: resolve(app.getPath('userData'), 'models'),

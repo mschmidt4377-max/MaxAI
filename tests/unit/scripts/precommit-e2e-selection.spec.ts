@@ -25,6 +25,7 @@ describe('local quick E2E selection', () => {
       sidebar: 'src/app/renderer/styles/workspace-sidebar.css',
       settings: 'src/app/renderer/styles/settings-panel.css',
       filesystem: 'src/contexts/filesystem/presentation/renderer/DirectoryBrowser.tsx',
+      voice: 'src/contexts/voice/domain/voiceTurn.ts',
     }
     expect(Object.keys(examples).sort()).toEqual(
       Object.keys(QUICK_E2E_GROUPS)

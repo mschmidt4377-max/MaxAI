@@ -1,6 +1,6 @@
 # Voice Control ("Jarvis") Spec
 
-Status: approved 2026-10-25 (hotkey changed to Alt+X, rebindable). Plan steps 1 to 4 done.
+Status: approved 2026-10-25 (hotkey changed to Alt+X, rebindable). Plan steps 1 to 4 done; step 5 E2E and manual check done.
 
 ## Goal
 
@@ -67,11 +67,15 @@ renderer: hold key -> getUserMedia -> MediaRecorder -> release -> decodeAudioDat
   -> IPC voice:transcribe -> utilityProcess (Whisper) -> text
 renderer: controlSurface session.writeNode(boss, text), wait 300 ms, write "\r"
 renderer: ptyEventHub.onSessionState(boss) sees working -> standby (only states after the Enter count)
-  -> session.finalMessage (retry 5 x 220 ms until it differs from the reply before the prompt)
+  -> session.finalMessage (retry 5 x 220 ms until it differs from the reply before the prompt;
+     for Claude it returns the `last_assistant_message` of the Stop hook, because the Claude Code
+     2.1 TUI writes no transcript file where the session-file reader looks)
   -> reply text -> pick spoken part
   -> IPC voice:speak -> utilityProcess (Kokoro) streams one audio chunk per sentence
 renderer: play chunks in order with WebAudio
 ```
+
+While voice reads replies aloud, the boss raises no standby banner or system notification; the spoken reply is the notice.
 
 ### What gets spoken
 
@@ -140,8 +144,8 @@ Push-to-talk is a new keybinding command `voice.pushToTalk`, default `Alt+X`. Us
 
 - Unit tests: `normalizeVoiceSettings` (old data with missing or invalid fields), the state machine, `splitIntoSentences`, `pickSpokenText`.
 - Contract tests for the three IPC channels.
-- One Playwright E2E with a stub engine: hold key, fake transcript reaches a stub agent, stub reply is "spoken" (chunk events observed).
-- Manual check on the real PC with George.
+- One Playwright E2E with a stub engine: hold key, fake transcript reaches a stub agent, stub reply is "spoken" (chunk events observed). Done: `tests/e2e/voice.push-to-talk.spec.ts`, with `OPENCOVE_TEST_VOICE_ENGINE=stub` (a fake microphone and a fixed transcript) and the `claude-hook-voice-reply` agent stub scenario.
+- Manual check on the real PC with George. Done 2026-10-25.
 
 ## Plan
 

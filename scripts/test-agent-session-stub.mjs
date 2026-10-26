@@ -29,6 +29,7 @@ import { runOpenCodeIdleWithMessageScenario } from './test-agent-session-stub/op
 import {
   runClaudeHookArbitrationScenario,
   runClaudeHookFallbackScenario,
+  runClaudeHookVoiceReplyScenario,
   runClaudeHookLifecycleScenario,
 } from './test-agent-session-stub/claudeHook.mjs'
 import {
@@ -116,6 +117,11 @@ async function main() {
 
   if (provider === 'claude-code' && scenario === 'claude-hook-arbitration') {
     await runClaudeHookArbitrationScenario(cwd, { mode: effectiveMode, resumeSessionId })
+    return
+  }
+
+  if (provider === 'claude-code' && scenario === 'claude-hook-voice-reply') {
+    await runClaudeHookVoiceReplyScenario(cwd)
     return
   }
 

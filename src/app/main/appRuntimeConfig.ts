@@ -35,6 +35,12 @@ export function configureAppCommandLine(): void {
     )
     disableFeatures.add('CalculateNativeWinOcclusion')
     app.commandLine.appendSwitch('disable-features', [...disableFeatures].join(','))
+
+    if (process.env['OPENCOVE_TEST_VOICE_ENGINE'] === 'stub') {
+      // A synthetic microphone with no permission prompt, so push-to-talk runs headless.
+      app.commandLine.appendSwitch('use-fake-device-for-media-stream')
+      app.commandLine.appendSwitch('use-fake-ui-for-media-stream')
+    }
   }
 
   if (process.platform === 'linux' && process.env['NODE_ENV'] === 'test') {

@@ -65,6 +65,14 @@ export const QUICK_E2E_GROUPS = {
     matches: path =>
       /contexts\/settings\/|settings-panel|settingspanel|styles\/base\.css/.test(path),
   },
+  voice: {
+    reason: 'Push-to-talk reaches the boss agent and its reply is spoken.',
+    tests: [e2e('voice.push-to-talk')],
+    matches: path =>
+      /contexts\/voice\/|app\/main\/voice\/|voice-indicator|locales\/[a-z-]+\.voice\.|agenthook/.test(
+        path,
+      ),
+  },
   filesystem: {
     reason: 'Filesystem navigation and dropped nodes retain their intended position.',
     tests: [
