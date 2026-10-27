@@ -8,6 +8,7 @@ import { zhCNSettingsPanelEndpoints } from './zh-CN.settingsPanel.endpoints'
 import { zhCNSettingsPanelLayout } from './zh-CN.settingsPanel.layout'
 import { zhCNSettingsPanelWorkspace } from './zh-CN.settingsPanel.workspace'
 import { zhCNWorkspaceCanvasNavigationShortcutCommands } from './zh-CN.settingsPanel.shortcuts.workspaceCanvasNavigation'
+import { zhCNVoiceShortcuts } from './zh-CN.voice'
 
 export const zhCNSettingsPanel = {
   plugins: zhCNSettingsPanelPlugins,
@@ -330,6 +331,7 @@ export const zhCNSettingsPanel = {
         title: '工作区画布',
         help: '用于在画布中创建节点和切换 Space 的快捷键。',
       },
+      voice: zhCNVoiceShortcuts.group,
     },
     commands: {
       commandCenterToggle: {
@@ -385,6 +387,7 @@ export const zhCNSettingsPanel = {
         help: '切换到上一个没有 working agent 的 Space。',
       },
       ...zhCNWorkspaceCanvasNavigationShortcutCommands,
+      voicePushToTalk: zhCNVoiceShortcuts.command,
     },
   },
   tasks: {

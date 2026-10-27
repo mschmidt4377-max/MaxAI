@@ -15,6 +15,7 @@ import { enSidebarRail } from './en.sidebarRail'
 import { enCanvasCollapse } from './en.canvasCollapse'
 import { enControlCenter } from './en.controlCenter'
 import { enSpaceCollapse } from './en.spaceCollapse'
+import { enVoice } from './en.voice'
 
 export const en = {
   pluginHostExtensions: {
@@ -34,6 +35,7 @@ export const en = {
   ...enCanvasCollapse,
   ...enControlCenter,
   ...enSpaceCollapse,
+  ...enVoice,
   common: {
     actions: 'Actions',
     back: 'Back',

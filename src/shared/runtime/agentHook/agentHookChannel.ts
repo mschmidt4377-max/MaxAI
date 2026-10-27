@@ -34,6 +34,8 @@ export interface AgentHookChannel {
   reserveSpawn: () => Promise<AgentHookSpawnReservation>
   onState: (listener: (event: TerminalSessionStateEvent) => void) => () => void
   onMetadata: (listener: (event: TerminalSessionMetadataEvent) => void) => () => void
+  /** The agent's last reply as its own turn-end hook reported it, for agents whose hook carries one. */
+  getFinalMessage: (sessionId: string) => string | null
   disposeSession: (sessionId: string) => void
   getInstallState: () => AgentHookInstallState
   getEndpoint: () => string | null
@@ -108,6 +110,8 @@ export function createAgentHookChannel<TEnvelope extends AgentHookEnvelope>(opti
     envelope: TEnvelope,
   ) => { hookEventName: string; providerSessionId: string } | null
   publishManagedSessionIdentity?: boolean
+  /** The reply text a turn-end (`done`) envelope carries, when the provider includes it. */
+  resolveFinalMessage?: (envelope: TEnvelope) => string | null
   createObservationOwner?: () => AgentHookObservationOwner<TEnvelope>
   prepare?: () => Promise<AgentHookInstallResult>
   port?: number
@@ -115,6 +119,7 @@ export function createAgentHookChannel<TEnvelope extends AgentHookEnvelope>(opti
 }): AgentHookChannel {
   const credentials = new Map<string, CredentialRecord<TEnvelope>>()
   const tokenBySessionId = new Map<string, string>()
+  const finalMessageBySessionId = new Map<string, string>()
   const listeners = new Set<(event: TerminalSessionStateEvent) => void>()
   const metadataListeners = new Set<(event: TerminalSessionMetadataEvent) => void>()
   const createHttpServer = options.createHttpServer ?? createServer
@@ -165,6 +170,11 @@ export function createAgentHookChannel<TEnvelope extends AgentHookEnvelope>(opti
       metadataListeners.forEach(listener => listener({ sessionId, ...observation.metadata }))
     }
     const state = observation ? observation.state : envelope.state
+    const finalMessage = state === 'done' ? (options.resolveFinalMessage?.(envelope) ?? null) : null
+    if (finalMessage !== null) {
+      // Stored before the standby event goes out, so a reader reacting to standby finds it.
+      finalMessageBySessionId.set(sessionId, finalMessage)
+    }
     if (state !== null) {
       const event: TerminalSessionStateEvent = {
         sessionId,
@@ -392,7 +402,9 @@ export function createAgentHookChannel<TEnvelope extends AgentHookEnvelope>(opti
       metadataListeners.add(listener)
       return () => metadataListeners.delete(listener)
     },
+    getFinalMessage: sessionId => finalMessageBySessionId.get(sessionId) ?? null,
     disposeSession: sessionId => {
+      finalMessageBySessionId.delete(sessionId)
       const token = tokenBySessionId.get(sessionId)
       if (!token) {
         return
@@ -411,6 +423,7 @@ export function createAgentHookChannel<TEnvelope extends AgentHookEnvelope>(opti
       credentials.forEach(credential => credential.observationOwner?.dispose())
       credentials.clear()
       tokenBySessionId.clear()
+      finalMessageBySessionId.clear()
       listeners.clear()
       metadataListeners.clear()
       endpoint = null

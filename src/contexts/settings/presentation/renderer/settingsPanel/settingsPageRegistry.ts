@@ -137,6 +137,7 @@ export const SETTINGS_PAGE_REGISTRY: Readonly<
     canonicalPageId: 'agent',
     scrollTargetId: 'settings-section-task-configuration',
   },
+  voice: { canonicalPageId: 'agent' },
   integrations: { canonicalPageId: 'worker', scrollTargetId: 'settings-section-integrations' },
   diagnostics: { canonicalPageId: 'advanced', scrollTargetId: 'settings-section-diagnostics' },
 }

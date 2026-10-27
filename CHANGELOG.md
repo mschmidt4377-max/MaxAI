@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### 🚀 Added
+
+- Voice: hold Alt+X, speak a command and release to send it to a chosen boss agent; when the boss finishes, a local voice reads its short summary aloud. Speech recognition (Whisper) and speech (Kokoro) run on this computer. Turn it on, pick the boss and the voice in Settings → Agent → Voice; rebind the key in Settings → Quick Actions. (#1)
+- CLI: agents can list, start, prompt and read other agents with `opencove agent list | spawn | prompt | read | guide`. (#1)
+
 ### 💅 Changed
 
 - Appearance: replace the Standard theme with Cove, whose colors are generated with checked contrast, and use Cove Dark for new installs. Ember is retired and existing Ember choices move to Cove; Pixel is unchanged. (#439)
@@ -28,6 +33,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 🐛 Fixed
 
+- Windows: Codex no longer receives stray characters from mouse input, and `opencove agent read` keeps full-screen agent output intact. (#1)
+- Agent: Claude's last reply is now read from its Stop hook, so features that use the final message work with Claude Code 2.1. (#1)
 - Agent: give each managed Claude launch its own conversation ID and preserve it across recovery, preventing same-directory nodes from binding to the newest unrelated transcript. (#425)
 - Terminal: probe WebGL support once and release the probe, so workspaces with many terminals no longer evict active terminal renderers. (#428)
 - Canvas: keep zooming smooth in large workspaces by no longer restyling every window on each zoom step. (#429)

@@ -146,3 +146,56 @@ export async function runClaudeHookFallbackScenario(
     process.stdin.resume()
   })
 }
+
+/** The reply a voice turn reads aloud; the SAY line is what the voice E2E expects to hear. */
+export const VOICE_REPLY = 'Two agents are running.\nSAY: You have two agents.'
+
+/**
+ * Answers each submitted prompt the way Claude Code 2.1 does: a raw UserPromptSubmit hook, then a
+ * raw Stop hook whose payload carries the reply as `last_assistant_message`.
+ */
+export async function runClaudeHookVoiceReplyScenario(cwd) {
+  const claudeSessionId = randomUUID()
+  const raw = hookEventName => ({
+    session_id: claudeSessionId,
+    transcript_path: `${cwd}/${claudeSessionId}.jsonl`,
+    cwd,
+    hook_event_name: hookEventName,
+  })
+  process.stdout.write('[opencove-test-voice] ready\n')
+
+  await new Promise(resolveRun => {
+    let line = ''
+    let operation = Promise.resolve()
+    process.stdin.on('data', chunk => {
+      for (const character of Buffer.from(chunk).toString('utf8')) {
+        if (character === '\x03') {
+          process.stdin.pause()
+          void operation.then(resolveRun)
+          return
+        }
+        // A cooked Unix TTY turns the submitted \r into \n; Windows ConPTY passes \r through.
+        if (character !== '\r' && character !== '\n') {
+          line += character
+          continue
+        }
+        const prompt = line.trim()
+        line = ''
+        if (!prompt) {
+          continue
+        }
+        operation = operation.then(async () => {
+          // Short lines, so a narrow test terminal never wraps the text the E2E looks for.
+          const [heard, instruction] = prompt.split(' (Voice request:')
+          process.stdout.write(`[opencove-test-voice] heard: ${heard}\n`)
+          process.stdout.write(`[opencove-test-voice] instruction: ${instruction !== undefined}\n`)
+          await postHook(raw('UserPromptSubmit'))
+          await new Promise(resolveDelay => setTimeout(resolveDelay, 150))
+          await postHook({ ...raw('Stop'), last_assistant_message: VOICE_REPLY })
+          process.stdout.write('[opencove-test-voice] replied\n')
+        })
+      }
+    })
+    process.stdin.resume()
+  })
+}

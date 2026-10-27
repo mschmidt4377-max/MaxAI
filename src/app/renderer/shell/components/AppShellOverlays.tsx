@@ -1,6 +1,7 @@
 import React from 'react'
 import type { AgentSettings } from '@contexts/settings/domain/agentSettings'
 import type { WorkspaceState } from '@contexts/workspace/presentation/renderer/types'
+import { VoiceAssistant } from '@contexts/voice/presentation/renderer/VoiceAssistant'
 import type { FloatingMessageState } from '../hooks/useFloatingMessage'
 import { AppMessage } from './AppMessage'
 import { AppNotifications, type AppNotification } from './AppNotifications'
@@ -56,6 +57,8 @@ export function AppShellOverlays({
         }}
         onDismiss={dismissNotification}
       />
+
+      <VoiceAssistant settings={agentSettings} />
 
       <ControlCenter
         isOpen={isControlCenterOpen}

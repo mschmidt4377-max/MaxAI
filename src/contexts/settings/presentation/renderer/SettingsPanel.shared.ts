@@ -48,6 +48,7 @@ type CorePageId =
   | 'experimental'
   | 'shortcuts'
   | 'task-configuration'
+  | 'voice'
   | 'integrations'
   | 'diagnostics'
 type WorkspacePageId = `workspace:${string}`

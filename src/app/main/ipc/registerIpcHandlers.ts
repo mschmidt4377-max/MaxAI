@@ -14,6 +14,8 @@ import { registerAppUpdateIpcHandlers } from '../../../contexts/update/presentat
 import { createAppUpdateService } from '../../../contexts/update/infrastructure/main/AppUpdateService'
 import { registerReleaseNotesIpcHandlers } from '../../../contexts/releaseNotes/presentation/main-ipc/register'
 import { createReleaseNotesService } from '../../../contexts/releaseNotes/infrastructure/main/ReleaseNotesService'
+import { registerVoiceIpcHandlers } from '../../../contexts/voice/presentation/main-ipc/register'
+import { createMainVoiceService } from '../voice/createMainVoiceService'
 import { registerFilesystemIpcHandlers } from '../../../contexts/filesystem/presentation/main-ipc/register'
 import { app } from 'electron'
 import type { PersistenceStore } from '../../../platform/persistence/sqlite/PersistenceStore'
@@ -201,6 +203,7 @@ export function registerIpcHandlers(deps?: {
     registerClipboardIpcHandlers(),
     registerAppUpdateIpcHandlers(appUpdateService),
     registerReleaseNotesIpcHandlers(releaseNotesService),
+    registerVoiceIpcHandlers(createMainVoiceService()),
     registerWorkspaceIpcHandlers(guardedApprovedWorkspaces),
     registerFilesystemIpcHandlers(guardedApprovedWorkspaces, approvedWorkspaces),
     registerPersistenceIpcHandlers(getPersistenceStore),

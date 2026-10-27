@@ -116,6 +116,7 @@ import { invokeIpc } from './ipcInvoke'
 import { resolveDroppedFile } from './filesystemDrop'
 import { onApplicationShortcut } from './applicationShortcutApi'
 import { createIssueReportPreloadApi } from './issueReportApi'
+import { createVoicePreloadApi } from './voiceApi'
 import { resolveOpenCoveMeta } from './opencoveMeta'
 import { createPerformanceDiagnosticsPreloadApi } from './performanceDiagnosticsApi'
 import { createWebsiteWindowPreloadApi } from './websiteWindowApi'
@@ -147,6 +148,7 @@ const opencoveApi = {
   },
   performanceDiagnostics: createPerformanceDiagnosticsPreloadApi(),
   issueReport: createIssueReportPreloadApi(),
+  voice: createVoicePreloadApi(),
   controlSurface: {
     resolvePluginResourceUrl: (resourcePath: string): Promise<string> =>
       invokeIpc(IPC_CHANNELS.controlSurfacePluginResourceUrl, resourcePath),

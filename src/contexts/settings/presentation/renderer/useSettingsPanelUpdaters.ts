@@ -156,6 +156,7 @@ export function createSettingsPanelUpdaters({
       updateSetting('disableAppShortcutsWhenTerminalFocused', enabled),
     updateKeybindings: (keybindings: AgentSettings['keybindings']): void =>
       updateSetting('keybindings', keybindings),
+    updateVoice: (voice: AgentSettings['voice']): void => updateSetting('voice', voice),
     updateGitHubPullRequestsEnabled: (enabled: boolean): void =>
       updateSetting('githubPullRequestsEnabled', enabled),
     updatePerformanceMonitorHeaderButtonEnabled: (enabled: boolean): void =>

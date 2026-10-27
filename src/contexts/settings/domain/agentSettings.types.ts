@@ -32,6 +32,7 @@ import type { TerminalBackgroundMode } from './terminalBackgroundSettings'
 import type { TerminalDisplayReference } from './terminalDisplayCalibration'
 import type { UiLanguage, UiTheme } from './uiSettings'
 import type { PluginContributionPreferences } from './pluginSettings'
+import type { VoiceSettings } from '../../voice/domain/voiceSettings'
 
 export type TaskTitleProvider = 'default' | TaskTitleAgentProvider
 export type TerminalProfileId = string | null
@@ -110,4 +111,5 @@ export interface AgentSettings extends PixelEffectSettings {
   hideWorktreeMismatchDropWarning: boolean
   archiveSpaceDeleteWorktreeByDefault: boolean
   archiveSpaceDeleteBranchByDefault: boolean
+  voice: VoiceSettings
 }

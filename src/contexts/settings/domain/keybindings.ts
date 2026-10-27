@@ -25,10 +25,18 @@ export const WORKSPACE_CANVAS_COMMAND_IDS = [
   'workspaceCanvas.navigateSpaceDown',
 ] as const
 
-export const COMMAND_IDS = [...APP_COMMAND_IDS, ...WORKSPACE_CANVAS_COMMAND_IDS] as const
+/** Hold-to-run commands. They track keydown and keyup, so the keydown dispatchers skip them. */
+export const VOICE_COMMAND_IDS = ['voice.pushToTalk'] as const
+
+export const COMMAND_IDS = [
+  ...APP_COMMAND_IDS,
+  ...WORKSPACE_CANVAS_COMMAND_IDS,
+  ...VOICE_COMMAND_IDS,
+] as const
 
 export type AppCommandId = (typeof APP_COMMAND_IDS)[number]
 export type WorkspaceCanvasCommandId = (typeof WORKSPACE_CANVAS_COMMAND_IDS)[number]
+export type VoiceCommandId = (typeof VOICE_COMMAND_IDS)[number]
 export type CommandId = (typeof COMMAND_IDS)[number]
 
 export type KeyChord = {
@@ -188,6 +196,13 @@ export function resolveDefaultKeybindings(
     'workspaceCanvas.navigateSpaceDown': createCommandModifierAltChord(platform, 'ArrowDown', {
       shiftKey: true,
     }),
+    'voice.pushToTalk': {
+      code: 'KeyX',
+      altKey: true,
+      ctrlKey: false,
+      metaKey: false,
+      shiftKey: false,
+    },
   }
 }
 

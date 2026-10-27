@@ -140,6 +140,13 @@ import type {
   PrepareIssueReportInput,
   PrepareIssueReportResult,
   ShowIssueReportFileInput,
+  VoiceCancelSpeakInput,
+  VoiceEngineStatus,
+  VoiceSpeakChunkEvent,
+  VoiceSpeakInput,
+  VoiceSpeakResult,
+  VoiceTranscribeInput,
+  VoiceTranscribeResult,
 } from '../../shared/contracts/dto'
 import type { ControlSurfaceInvokeRequest } from '../../shared/contracts/controlSurface'
 
@@ -173,6 +180,16 @@ export interface OpenCoveApi {
     prepare: (payload: PrepareIssueReportInput) => Promise<PrepareIssueReportResult>
     openGitHubIssue: (payload: OpenIssueReportGithubInput) => Promise<void>
     showReportFile: (payload: ShowIssueReportFileInput) => Promise<void>
+  }
+  /** Desktop only: the browser shell has no local voice engine. */
+  voice?: {
+    prepare: () => Promise<VoiceEngineStatus>
+    getStatus: () => Promise<VoiceEngineStatus>
+    onStatus: (listener: (status: VoiceEngineStatus) => void) => () => void
+    transcribe: (payload: VoiceTranscribeInput) => Promise<VoiceTranscribeResult>
+    speak: (payload: VoiceSpeakInput) => Promise<VoiceSpeakResult>
+    onSpeakChunk: (listener: (event: VoiceSpeakChunkEvent) => void) => () => void
+    cancelSpeak: (payload: VoiceCancelSpeakInput) => Promise<void>
   }
   controlSurface: {
     resolvePluginResourceUrl: (resourcePath: string) => Promise<string>

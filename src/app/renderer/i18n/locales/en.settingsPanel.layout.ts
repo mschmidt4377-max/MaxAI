@@ -5,6 +5,7 @@ export const enSettingsPanelLayout = {
     projectSettings: 'Project settings',
     providersTab: 'Providers',
     tasksTab: 'Task defaults',
+    voiceTab: 'Voice',
   },
   nav: {
     terminal: 'Terminal',

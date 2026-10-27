@@ -68,6 +68,7 @@ export function registerControlSurfaceHandlers(
     terminalSpawnAdmission: TerminalSpawnAdmission
     terminalRecoverySpawnAdmission: TerminalRecoverySpawnAdmission
     agentProviderRegistry: AgentProviderRegistry
+    readHookFinalMessage: (sessionId: string) => string | null
     terminalAgentActivity?: TerminalAgentActivityEnvironmentService
   },
 ): void {
@@ -129,6 +130,7 @@ export function registerControlSurfaceHandlers(
     terminalSpawnAdmission: deps.terminalSpawnAdmission,
     terminalRecoverySpawnAdmission: deps.terminalRecoverySpawnAdmission,
     agentProviderRegistry: deps.agentProviderRegistry,
+    readHookFinalMessage: deps.readHookFinalMessage,
   })
   registerSessionStreamingHandlers(controlSurface, {
     approvedWorkspaces: deps.approvedWorkspaces,

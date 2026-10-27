@@ -44,6 +44,8 @@ export function getCommandTitleKey(commandId: CommandId): string {
       return 'settingsPanel.shortcuts.commands.workspaceCanvasNavigateSpaceUp.title'
     case 'workspaceCanvas.navigateSpaceDown':
       return 'settingsPanel.shortcuts.commands.workspaceCanvasNavigateSpaceDown.title'
+    case 'voice.pushToTalk':
+      return 'settingsPanel.shortcuts.commands.voicePushToTalk.title'
     default: {
       const _exhaustive: never = commandId
       return _exhaustive
@@ -95,6 +97,8 @@ export function getCommandHelpKey(commandId: CommandId): string {
       return 'settingsPanel.shortcuts.commands.workspaceCanvasNavigateSpaceUp.help'
     case 'workspaceCanvas.navigateSpaceDown':
       return 'settingsPanel.shortcuts.commands.workspaceCanvasNavigateSpaceDown.help'
+    case 'voice.pushToTalk':
+      return 'settingsPanel.shortcuts.commands.voicePushToTalk.help'
     default: {
       const _exhaustive: never = commandId
       return _exhaustive

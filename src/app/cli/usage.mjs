@@ -51,6 +51,15 @@ export function printUsage() {
   process.stdout.write(`  opencove node delete --node <id> [--pretty]\n`)
   process.stdout.write(`  opencove canvas focus node --node <id> [--pretty]\n`)
   process.stdout.write(`  opencove canvas focus space [space locator] [--pretty]\n\n`)
+  process.stdout.write(`  opencove agent guide\n`)
+  process.stdout.write(`  opencove agent list [space locator] [--project <id>] [--pretty]\n`)
+  process.stdout.write(
+    `  opencove agent spawn [space locator] [--provider <id>] [--model <id>] [--prompt <text>] [--title <text>] [--focus] [--pretty]\n`,
+  )
+  process.stdout.write(`  opencove agent prompt --node <id> --text <text> [--pretty]\n`)
+  process.stdout.write(
+    `  opencove agent read --node <id> [--lines <n>]  (plain text, last n non-blank screen lines, default 40)\n\n`,
+  )
   process.stdout.write(`  opencove mount list --project <id> [--pretty]\n`)
   process.stdout.write(
     `  opencove mount create --project <id> --endpoint-id <id> --root-path <path> [--name <text>] [--pretty]\n\n`,

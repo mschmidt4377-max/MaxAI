@@ -48,6 +48,14 @@ export const AGENT_SETTINGS_SEARCH_ENTRY_DEFINITIONS: AgentSettingsSearchEntryDe
     anchorId: 'settings-agent-full-access',
     keywords: ['sandbox', 'approval', 'permission', '权限', '沙箱'],
   },
+  {
+    id: 'agent.voice',
+    pageId: 'voice',
+    titleKey: 'voice.settings.groupTitle',
+    descriptionKey: 'voice.settings.groupHelp',
+    anchorId: 'settings-section-voice',
+    keywords: ['voice', 'speech', 'microphone', 'push to talk', 'boss', 'jarvis', '语音', '麦克风'],
+  },
   ...DETAILS.map(detail => ({
     id: `agent.${detail.kind}`,
     pageId: 'agent' as const,

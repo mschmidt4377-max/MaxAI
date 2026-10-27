@@ -5,6 +5,7 @@ export const zhCNSettingsPanelLayout = {
     projectSettings: '项目设置',
     providersTab: '提供方',
     tasksTab: '任务默认项',
+    voiceTab: '语音',
   },
   nav: {
     terminal: '终端',

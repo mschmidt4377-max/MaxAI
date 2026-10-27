@@ -25,6 +25,7 @@ const EXPECTED_CANONICAL_PAGE_IDS = {
   experimental: 'advanced',
   shortcuts: 'tasks-shortcuts',
   'task-configuration': 'agent',
+  voice: 'agent',
   integrations: 'worker',
   diagnostics: 'advanced',
 } as const satisfies Record<StaticSettingsPageId, StaticSettingsPageId>
@@ -36,6 +37,7 @@ const SECONDARY_ALIASES = [
   'shortcuts',
   'quick-menu',
   'task-configuration',
+  'voice',
   'endpoints',
   'experimental',
   'diagnostics',
@@ -65,6 +67,7 @@ describe('settingsPageRegistry', () => {
       shortcuts: 'tasks-shortcuts',
       'quick-menu': 'tasks-shortcuts',
       'task-configuration': 'agent',
+      voice: 'agent',
       endpoints: 'worker',
       experimental: 'advanced',
       diagnostics: 'advanced',

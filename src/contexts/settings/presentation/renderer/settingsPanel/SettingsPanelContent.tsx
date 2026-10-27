@@ -24,10 +24,33 @@ import { TerminalSettingsSection } from './TerminalSettingsSection'
 import { AgentSettingsPage } from './AgentSettingsPage'
 import { WorkerConnectionsSection } from './WorkerConnectionsSection'
 import { WorkspaceSection } from './WorkspaceSection'
+import { VoiceSection } from '@contexts/voice/presentation/renderer/VoiceSection'
+
+const AGENT_PAGE_TABS = [
+  {
+    pageId: 'agent',
+    testId: 'settings-agent-tab-providers',
+    labelKey: 'settingsPanel.navigation.providersTab',
+  },
+  {
+    pageId: 'task-configuration',
+    testId: 'settings-agent-tab-tasks',
+    labelKey: 'settingsPanel.navigation.tasksTab',
+  },
+  {
+    pageId: 'voice',
+    testId: 'settings-agent-tab-voice',
+    labelKey: 'settingsPanel.navigation.voiceTab',
+  },
+] as const satisfies readonly { pageId: SettingsPageId; testId: string; labelKey: string }[]
+
+/** Agent tabs other than Providers; any other page id on the Agent page shows Providers. */
+const AGENT_SUB_PAGE_IDS: ReadonlySet<SettingsPageId> = new Set(['task-configuration', 'voice'])
 
 type Props = Pick<
   SettingsPanelProps,
   | 'settings'
+  | 'workspaces'
   | 'updateState'
   | 'modelCatalogByProvider'
   | 'onWorkspaceWorktreesRootChange'
@@ -47,6 +70,7 @@ type Props = Pick<
 
 export function SettingsPanelContent({
   settings,
+  workspaces,
   updateState,
   modelCatalogByProvider,
   onWorkspaceWorktreesRootChange,
@@ -111,6 +135,7 @@ export function SettingsPanelContent({
     updateAgentEnvByProvider,
     updateDisableAppShortcutsWhenTerminalFocused,
     updateKeybindings,
+    updateVoice,
     updateGitHubPullRequestsEnabled,
     updatePerformanceMonitorHeaderButtonEnabled,
     addModelInputByProvider,
@@ -188,24 +213,30 @@ export function SettingsPanelContent({
       {canonicalPageId === 'agent' ? (
         <>
           <nav className="settings-panel__tabs" aria-label={t('settingsPanel.nav.agent')}>
-            <button
-              type="button"
-              data-testid="settings-agent-tab-providers"
-              aria-current={activePageId !== 'task-configuration' ? 'page' : undefined}
-              onClick={() => onSelectPage('agent')}
-            >
-              {t('settingsPanel.navigation.providersTab')}
-            </button>
-            <button
-              type="button"
-              data-testid="settings-agent-tab-tasks"
-              aria-current={activePageId === 'task-configuration' ? 'page' : undefined}
-              onClick={() => onSelectPage('task-configuration')}
-            >
-              {t('settingsPanel.navigation.tasksTab')}
-            </button>
+            {AGENT_PAGE_TABS.map(tab => (
+              <button
+                key={tab.pageId}
+                type="button"
+                data-testid={tab.testId}
+                aria-current={
+                  (AGENT_SUB_PAGE_IDS.has(activePageId) ? activePageId : 'agent') === tab.pageId
+                    ? 'page'
+                    : undefined
+                }
+                onClick={() => onSelectPage(tab.pageId)}
+              >
+                {t(tab.labelKey)}
+              </button>
+            ))}
           </nav>
-          {activePageId === 'task-configuration' ? (
+          {activePageId === 'voice' ? (
+            <VoiceSection
+              voice={settings.voice}
+              keybindings={settings.keybindings}
+              workspaces={workspaces}
+              onChange={updateVoice}
+            />
+          ) : activePageId === 'task-configuration' ? (
             <TaskConfigurationSection
               showTaskTitleGeneration={AI_NAMING_FEATURES.taskTitleGeneration}
               taskTitleProvider={settings.taskTitleProvider}
